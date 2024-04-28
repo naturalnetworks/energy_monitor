@@ -14,8 +14,8 @@ Column 2: Fronius PV Import
 Column 3: Sungrow Purchased Power
 Column 4: Fronius PV Load
 Column 5: Fronius PV Generation
-Column 6: Sungrow Battery Charging/Discharging Rate
-Column 7: Sungrow Battery Level
+Column 6: Sungrow Battery Charging/Discharging Rate (light purple/purple)
+Column 7: Sungrow Battery Level (light blue)
 
 Author: Ben Johns (bjohns@naturalnetworks.net)
 """
@@ -129,7 +129,7 @@ def animate_battery(charge_rate, discharge_rate, current_soc, charging_speed=0.1
        # sense.clear(7)
         
         # Calculate LED position based on SoC
-        pixel_y = int((soc / 8) * 7)  # Convert SoC to LED row
+        pixel_y = int((soc / 12.5) * 7)  # Convert SoC to LED row
         
         # Draw LED bar
         # for i in range(pixel_y + 1):
@@ -138,7 +138,7 @@ def animate_battery(charge_rate, discharge_rate, current_soc, charging_speed=0.1
 
         # Draw LED bar
         for i in range(8):
-            sense.set_pixel(7, 7 - i, lightblue)
+            sense.set_pixel(7, 7 - i, blue)
             cli_matrix[7][7 - i] = 'b'
             
         
@@ -163,6 +163,12 @@ def update_senseHatLED(
     sg_battery_level_soc
     ):
 
+    # Convert Sungrow energy values from kilowatts to watts
+    sg_purchased_power *= 1000
+    sg_total_export_active__power *= 1000
+    sg_battery_charging_power *= 1000
+    sg_battery_discharging_power *= 1000
+
     # Define a dictionary to hold the variable names and their corresponding values
     variables = {
         "f_pvimport": f_pvimport,
@@ -174,12 +180,6 @@ def update_senseHatLED(
         "sg_battery_charging_power": sg_battery_charging_power,
         "sg_battery_discharging_power": sg_battery_discharging_power,
     }
-
-    # Convert Sungrow energy values from kilowatts to watts
-    sg_purchased_power *= 1000
-    sg_total_export_active__power *= 1000
-    sg_battery_charging_power *= 1000
-    sg_battery_discharging_power *= 1000
 
     # Loop through each variable and perform the division operation
     for key, value in variables.items():
@@ -203,8 +203,8 @@ def update_senseHatLED(
 
     # logger.debug("update_senseHatLED params now: " + str(pvimport) + ", " + str(pvexport) + ", " + str(pvload) + ", " + str(pvgeneration))
 
-    # Clear LED Matrix - we don't need this as we will be updating it as we get MQTT data
-    # sense.clear()
+    # Clear LED Matrix
+    sense.clear()
 
     # Clear LED Matrix
     global cli_matrix
@@ -251,7 +251,7 @@ def update_senseHatLED(
 
     if led_sg_battery_level_soc > 0:
         for i in range(led_sg_battery_level_soc):
-            sense.set_pixel(7, i, lightblue)
+            sense.set_pixel(7, i, blue)
             cli_matrix[7][i] = 'b'
 
 
