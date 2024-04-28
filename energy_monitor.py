@@ -50,6 +50,7 @@ sense.low_light = True
 red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
+darkblue = (0, 0, 139)
 lightred = (255,153,153)
 lightgreen = (153,255,153)
 lightblue = (153,153,255)
@@ -126,20 +127,20 @@ def animate_battery(charge_rate, discharge_rate, current_soc, charging_speed=0.1
     # Start animation loop
     for soc in range(current_soc, target_soc + direction, direction):
         # Clear only the current column
-       # sense.clear(7)
+        sense.clear()
         
         # Calculate LED position based on SoC
-        pixel_y = int((soc / 12.5) * 7)  # Convert SoC to LED row
+        pixel_y = int((soc / 8) * 7)  # Convert SoC to LED row
         
         # Draw LED bar
-        # for i in range(pixel_y + 1):
-        #    sense.set_pixel(7, 7 - i, lightblue)
-        #   cli_matrix[7][7 - i] = 'b'
+        for i in range(pixel_y + 1):
+            sense.set_pixel(7, 7 - i, blue)
+            cli_matrix[7][7 - i] = 'B'
 
         # Draw LED bar
-        for i in range(8):
-            sense.set_pixel(7, 7 - i, blue)
-            cli_matrix[7][7 - i] = 'b'
+        #for i in range(8):
+        #    sense.set_pixel(7, 7 - i, blue)
+        #    cli_matrix[7][7 - i] = 'b'
             
         
         # Display LED matrix
@@ -240,6 +241,7 @@ def update_senseHatLED(
             sense.set_pixel(5, i, lightgreen)
             cli_matrix[5][i] = 'g'
 
+    # Then Sungrow Battery Charging and Discharging
     if led_sg_battery_discharging_power > 0:
         for i in range(led_sg_battery_discharging_power):
             sense.set_pixel(6, i, purple)
@@ -249,16 +251,17 @@ def update_senseHatLED(
             sense.set_pixel(6, i, lightpurple)
             cli_matrix[6][i] = 'p'
 
+    # Then Sungrow Battery Level
     if led_sg_battery_level_soc > 0:
         for i in range(led_sg_battery_level_soc):
-            sense.set_pixel(7, i, blue)
-            cli_matrix[7][i] = 'b'
+            sense.set_pixel(7, i, darkblue)
+            cli_matrix[7][i] = 'B'
 
 
-    # Finally, the Sungrow Battery Charging
+    # Optionally, Sungrow Battery Charging, animated
     # animate_battery(led_sg_battery_charging_power, led_sg_battery_discharging_power, led_sg_battery_level_soc)
 
-    # Print the LED matrix grid
+    # Print the LED matrix grid - remark this out when no longer testing
     print_cli_matrix(cli_matrix)
 
 def main():
