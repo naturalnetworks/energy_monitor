@@ -8,12 +8,12 @@ Depenencies:
 Update a SenseHAT LED Matrix with values from a Fronius inverter and Sungrow Battery
 obtained from MQTT.
 
-Column 0: Fronius PV Export
-Column 1: Sungrow Export Active Power
-Column 2: Fronius PV Import
-Column 3: Sungrow Purchased Power
-Column 4: Fronius PV Load
-Column 5: Fronius PV Generation
+Column 0: Fronius PV Export (Green)
+Column 1: Sungrow Export Active Power (Green)
+Column 2: Fronius PV Import (Red)
+Column 3: Sungrow Purchased Power (Red)
+Column 4: Fronius PV Load (orange)
+Column 5: Fronius PV Generation (Light Green)
 Column 6: Sungrow Battery Charging/Discharging Rate (light purple/purple)
 Column 7: Sungrow Battery Level (light blue)
 
@@ -22,6 +22,7 @@ Author: Ben Johns (bjohns@naturalnetworks.net)
 
 import time
 import json
+import threading
 import paho.mqtt.client as mqtt
 
 try:
@@ -56,6 +57,7 @@ lightgreen = (153,255,153)
 lightblue = (153,153,255)
 purple = (128, 0, 128)
 lightpurple = (196, 64, 196)
+orange = (255, 165, 0)
 
 # Define MQTT topics and broker
 fronius_topic = "home/fronius"
@@ -117,7 +119,7 @@ def update_cumulative_sungrow_values(payload):
     cumulative_sungrow_values['sg_battery_level_soc'] = payload.get("Battery_Level_SOC", cumulative_sungrow_values['sg_battery_level_soc'])
 
 # Function to animate battery charging or discharging
-def animate_battery(charge_rate, discharge_rate, current_soc, charging_speed=0.1, discharge_speed=0.1):
+def animate_battery(charge_rate=0, discharge_rate=0, current_soc=0, charging_speed=0.1, discharge_speed=0.1):
     # Calculate the target state of charge based on charge and discharge rates
     target_soc = current_soc + charge_rate - discharge_rate
     
@@ -234,7 +236,7 @@ def update_senseHatLED(
     # Then Fronius Self Consumption and Generation
     if led_f_pvload > 0:
         for i in range(led_f_pvload):
-            sense.set_pixel(4, i, lightred)
+            sense.set_pixel(4, i, orange)
             cli_matrix[4][i] = 'r'
     if led_f_pvgeneration > 0:
         for i in range(led_f_pvgeneration):
@@ -272,6 +274,11 @@ def main():
     client.subscribe(sungrow_topic)
     client.on_message = on_message
     client.loop_start()
+
+    # Start the animation loop in a separate thread
+    # animation_thread = threading.Thread(target=animate_battery)
+    # animation_thread.daemon = True  # Set the thread as a daemon so it terminates when the main thread exits
+    # animation_thread.start()
 
     # Main loop to keep the program running
     while True:
