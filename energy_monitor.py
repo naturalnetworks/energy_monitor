@@ -8,9 +8,9 @@ Depenencies:
 Update a SenseHAT LED Matrix with values from a Fronius inverter and Sungrow Battery
 obtained from MQTT.
 
-Column 0: Fronius PV Export (Green)
+Column 0: Fronius PV Export (Light Green)
 Column 1: Sungrow Export Active Power (Green)
-Column 2: Fronius PV Import (Red)
+Column 2: Fronius PV Import (Light Red)
 Column 3: Sungrow Purchased Power (Red)
 Column 4: Fronius PV Load (orange)
 Column 5: Fronius PV Generation (Light Green)
@@ -58,6 +58,7 @@ lightblue = (153,153,255)
 purple = (128, 0, 128)
 lightpurple = (196, 64, 196)
 orange = (255, 165, 0)
+yellow = (255, 255, 0)
 
 # Define MQTT topics and broker
 fronius_topic = "home/fronius"
@@ -74,7 +75,7 @@ def print_cli_matrix(matrix):
     print('')
 
 # Initialize a 8x8 grid to represent the LED matrix
-cli_matrix = [['O' for _ in range(8)] for _ in range(8)]
+cli_matrix = [['X' for _ in range(8)] for _ in range(8)]
 
 # Initialize variables to store cumulative values for Fronius and Sungrow data
 cumulative_fronius_values = {
@@ -204,6 +205,17 @@ def update_senseHatLED(
     # Convert battery level from percentage (0 - 100) to number of LEDs (8)
     led_sg_battery_level_soc = int(sg_battery_level_soc/12.5)
 
+    # Ensure values do not exceed 8 LEDs
+    led_f_pvimport = min(led_f_pvimport, 8)
+    led_f_pvexport = min(led_f_pvexport, 8)
+    led_f_pvgeneration = min(led_f_pvgeneration, 8)
+    led_f_pvload = min(led_f_pvload, 8)
+    led_sg_purchased_power = min(led_sg_purchased_power, 8)
+    led_sg_total_export_active__power = min(led_sg_total_export_active__power, 8)
+    led_sg_battery_charging_power = min(led_sg_battery_charging_power, 8)
+    led_sg_battery_discharging_power = min(led_sg_battery_discharging_power, 8)
+    led_sg_battery_level_soc = min(led_sg_battery_level_soc, 8)
+
     # logger.debug("update_senseHatLED params now: " + str(pvimport) + ", " + str(pvexport) + ", " + str(pvload) + ", " + str(pvgeneration))
 
     # Clear LED Matrix
@@ -211,13 +223,13 @@ def update_senseHatLED(
 
     # Clear LED Matrix
     global cli_matrix
-    cli_matrix = [['O' for _ in range(8)] for _ in range(8)]
+    cli_matrix = [['X' for _ in range(8)] for _ in range(8)]
 
     # Starting with Fronius PV export and Sungrow Export
     if led_f_pvexport > 0:
         for i in range(led_f_pvexport):
-            sense.set_pixel(0, i, green)
-            cli_matrix[0][i] = 'G'
+            sense.set_pixel(0, i, lightgreen)
+            cli_matrix[0][i] = 'g'
     if led_sg_total_export_active__power > 0:
         for i in range(led_sg_total_export_active__power):
             sense.set_pixel(1, i, green)
@@ -226,8 +238,8 @@ def update_senseHatLED(
     # Then Fronius PV import and Sungrow Import
     if led_f_pvimport > 0:
         for i in range(led_f_pvimport):
-            sense.set_pixel(2, i, red)
-            cli_matrix[2][i] = 'R'
+            sense.set_pixel(2, i, lightred)
+            cli_matrix[2][i] = 'r'
     if led_sg_purchased_power > 0:
         for i in range(led_sg_purchased_power):
             sense.set_pixel(3, i, red)
@@ -237,11 +249,11 @@ def update_senseHatLED(
     if led_f_pvload > 0:
         for i in range(led_f_pvload):
             sense.set_pixel(4, i, orange)
-            cli_matrix[4][i] = 'r'
+            cli_matrix[4][i] = 'O'
     if led_f_pvgeneration > 0:
         for i in range(led_f_pvgeneration):
-            sense.set_pixel(5, i, lightgreen)
-            cli_matrix[5][i] = 'g'
+            sense.set_pixel(5, i, yellow)
+            cli_matrix[5][i] = 'Y'
 
     # Then Sungrow Battery Charging and Discharging
     if led_sg_battery_discharging_power > 0:
