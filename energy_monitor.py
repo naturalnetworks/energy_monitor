@@ -4,6 +4,7 @@ energy_monitor.py
 Depenencies:
     paho-mqtt (https://pypi.org/project/paho-mqtt/)
     sense-hat (https://pypi.org/project/sense-hat/)
+    sdnotify (https://pypi.org/project/sdnotify/)
 
 Update a SenseHAT LED Matrix with values from a Fronius inverter and Sungrow Battery
 obtained from MQTT.
@@ -24,6 +25,11 @@ import time
 import json
 import threading
 import paho.mqtt.client as mqtt
+
+import sdnotify
+
+# Initialize sdnotify
+notifier = sdnotify.Notifier()
 
 try:
     from sense_hat import SenseHat
@@ -291,6 +297,9 @@ def main():
     # animation_thread = threading.Thread(target=animate_battery)
     # animation_thread.daemon = True  # Set the thread as a daemon so it terminates when the main thread exits
     # animation_thread.start()
+
+    # Trigger the watchdog
+    notifier.notify("WATCHDOG=1")
 
     # Main loop to keep the program running
     while True:
