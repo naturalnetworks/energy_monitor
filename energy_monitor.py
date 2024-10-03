@@ -29,7 +29,7 @@ import paho.mqtt.client as mqtt
 import sdnotify
 
 # Initialize sdnotify
-notifier = sdnotify.Notifier()
+notifier = sdnotify.SystemdNotifier()
 
 try:
     from sense_hat import SenseHat
