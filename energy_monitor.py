@@ -99,6 +99,22 @@ cumulative_sungrow_values = {
     'sg_battery_level_soc': 0
 }
 
+def reconnect(client):
+    while True:
+        try:
+            print("Reconnecting to MQTT Broker...")
+            client.connect(broker_address, broker_port, 60)
+            if client.connected:
+                print("Reconnection successful!")
+                client.subscribe(fronius_topic)
+                client.subscribe(sungrow_topic)
+                break
+            else:
+                print("Reconnection failed. Retry in 5 seconds...")
+        except ConnectionRefusedError:
+            print("Connection refused. Retry in 5 seconds...")
+        time.sleep(5)
+
 # Define callback function for MQTT message reception
 def on_message(client, userdata, msg):
     payload = json.loads(msg.payload)
@@ -303,6 +319,9 @@ def main():
 
     # Main loop to keep the program running
     while True:
+        # Call the reconnect function if necessary
+        if not client.connected:
+            reconnect(client)
         time.sleep(0.1)
 
 # Check if the script is executed as the main program
