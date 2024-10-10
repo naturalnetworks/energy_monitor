@@ -73,6 +73,9 @@ device_id = "rpizero.home.arpa"
 broker_address = "nas.home.arpa"
 broker_port = 1883
 
+# Set flag to indicate that the MQTT client is connected
+mqtt.Client.connected_flag=False
+
 # Define a function to print the LED matrix grid
 def print_cli_matrix(matrix):
     print('1 2 3 4 5 6 7 8')
@@ -99,21 +102,14 @@ cumulative_sungrow_values = {
     'sg_battery_level_soc': 0
 }
 
-def reconnect(client):
-    while True:
-        try:
-            print("Reconnecting to MQTT Broker...")
-            client.connect(broker_address, broker_port, 60)
-            if client.connected:
-                print("Reconnection successful!")
-                client.subscribe(fronius_topic)
-                client.subscribe(sungrow_topic)
-                break
-            else:
-                print("Reconnection failed. Retry in 5 seconds...")
-        except ConnectionRefusedError:
-            print("Connection refused. Retry in 5 seconds...")
-        time.sleep(5)
+# Define callback function for MQTT connection
+def on_connect(client, userdata, flags, rc):
+    if rc==0:
+        client.connected_flag=True #set flag
+        print("connected OK Returned code=",rc)
+        #client.subscribe(topic)
+    else:
+        print("Bad connection Returned code= ",rc)
 
 # Define callback function for MQTT message reception
 def on_message(client, userdata, msg):
@@ -303,11 +299,16 @@ def update_senseHatLED(
 def main():
     # Initialize MQTT client
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-    client.connect(broker_address, broker_port, 60)
+    
+    client.on_connect=on_connect # Bind callback function
+    client.loop_start()
+    client.connect(broker_address, broker_port, 60) 
+    while not client.connected_flag: #wait in loop
+        time.sleep(1)
     client.subscribe(fronius_topic)
     client.subscribe(sungrow_topic)
     client.on_message = on_message
-    client.loop_start()
+    
 
     # Start the animation loop in a separate thread
     # animation_thread = threading.Thread(target=animate_battery)
@@ -319,9 +320,6 @@ def main():
 
     # Main loop to keep the program running
     while True:
-        # Call the reconnect function if necessary
-        if not client.connected:
-            reconnect(client)
         time.sleep(0.1)
 
 # Check if the script is executed as the main program
